@@ -38,6 +38,7 @@ const statusMsg = document.getElementById('statusMsg');
 let monthData = {};
 let selectedDay = null;
 let currentShiftType = 'none';
+let lastCalculatedGross = 0; // Сохраняем для отправки на бэкенд
 
 // Установка текущего месяца и года при старте
 function setCurrentDate() {
@@ -82,7 +83,7 @@ function getPolishHolidays(year) {
 
   const easterMonday = new Date(easterDate);
   easterMonday.setDate(easterDate.getDate() + 1);
-  addHoliday(easterMonday.getMonth() + 1, easterMonday.getDate(), 'Poniedziałek Wielkanocny');
+  addHoliday(easterMonday.getMonth() + 1, easterMonday.getDate(), 'Poniedziałek Wielkanocный');
 
   const pentecost = new Date(easterDate);
   pentecost.setDate(easterDate.getDate() + 49);
@@ -129,7 +130,6 @@ calcTypeSelect.addEventListener('change', () => {
 monthSelect.addEventListener('change', loadShiftsFromDB);
 yearSelect.addEventListener('change', loadShiftsFromDB);
 
-// Обработчик кнопки "Текущий месяц"
 todayBtn.addEventListener('click', () => {
   setCurrentDate();
   loadShiftsFromDB();
@@ -138,6 +138,12 @@ todayBtn.addEventListener('click', () => {
 monthlyRateInput.addEventListener('input', calculateTotals);
 rateInput.addEventListener('input', calculateTotals);
 bonusInput.addEventListener('input', calculateTotals);
+
+// Безопасный парсинг чисел с поддержкой запятых (например, "25,50" -> 25.50)
+function parseFormattedFloat(value) {
+  if (!value) return 0;
+  return parseFloat(String(value).replace(',', '.')) || 0;
+}
 
 async function loadShiftsFromDB() {
   const month = monthSelect.value;
@@ -401,14 +407,14 @@ function calculateTotals() {
     }
   });
 
-  const bonusAmount = parseFloat(bonusInput.value) || 0;
+  const bonusAmount = parseFormattedFloat(bonusInput.value);
   const isMonthlyCalc = (calcTypeSelect.value === 'monthly');
 
   let totalBasePay = 0;
   let totalOvertimePay = 0;
 
   if (isMonthlyCalc) {
-    const monthlyRate = parseFloat(monthlyRateInput.value) || 0;
+    const monthlyRate = parseFormattedFloat(monthlyRateInput.value);
     const effectiveHourlyRate = normBaseHours > 0 ? (monthlyRate / normBaseHours) : 0;
     
     if (actualWorkedBaseHours >= normBaseHours) {
@@ -420,18 +426,18 @@ function calculateTotals() {
     totalOvertimePay = totalOvertime * (effectiveHourlyRate * 2);
 
   } else {
-    const hourlyRate = parseFloat(rateInput.value) || 0;
+    const hourlyRate = parseFormattedFloat(rateInput.value);
     totalBasePay = actualWorkedBaseHours * hourlyRate;
     totalOvertimePay = totalOvertime * (hourlyRate * 2);
   }
 
-  const totalGrossEarned = totalBasePay + totalOvertimePay + bonusAmount;
+  lastCalculatedGross = totalBasePay + totalOvertimePay + bonusAmount;
 
   totalShiftsEl.innerText = daysWorked;
   totalBaseHoursEl.innerText = `${actualWorkedBaseHours} ч (из ${normBaseHours}ч)`;
   totalOvertimeHoursEl.innerText = `${totalOvertime} ч`;
   totalAllHoursEl.innerText = `${actualWorkedBaseHours + totalOvertime} ч`;
-  totalGrossEarnedEl.innerText = `${totalGrossEarned.toFixed(2)} zł`;
+  totalGrossEarnedEl.innerText = `${lastCalculatedGross.toFixed(2)} zł`;
 
   const storageKey = `finance_${year}_${month}`;
   localStorage.setItem(storageKey, JSON.stringify({
@@ -453,9 +459,10 @@ saveBtn.addEventListener('click', async function() {
     month: month,
     year: year,
     calcType: calcTypeSelect.value,
-    monthlyRate: parseFloat(monthlyRateInput.value) || 0,
-    rate: parseFloat(rateInput.value) || 0,
-    bonus: parseFloat(bonusInput.value) || 0,
+    monthlyRate: parseFormattedFloat(monthlyRateInput.value),
+    rate: parseFormattedFloat(rateInput.value),
+    bonus: parseFormattedFloat(bonusInput.value),
+    totalGross: lastCalculatedGross, // Передаем итоговую сумму для бэкенда
     scheduleData: monthData
   };
 
