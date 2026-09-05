@@ -12,7 +12,7 @@ export default {
 
     const url = new URL(request.url);
 
-    if (url.pathname === "/api/save" && request.method === "POST") {
+    if (url.pathname === "/api/shifts" && request.method === "POST") {
       try {
         const data = await request.json();
         
