@@ -1,0 +1,10 @@
+name = "work-schedule"
+main = "worker.js"
+compatibility_date = "2026-09-05"
+
+[vars]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "work-schedule-db"
+database_id = "ea4e7658-d994-484d-9551-6ee5e852d37c"
