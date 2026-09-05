@@ -1,0 +1,12 @@
+{
+  "name": "work-schedule-app",
+  "version": "1.0.0",
+  "description": "Учет смен и сверхурочных KP Polska",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
