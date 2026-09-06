@@ -2,6 +2,8 @@ const TRANSLATIONS = {
   ru: {
     months: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
     weekdays: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
+    tabCalendar: "📅 Календарь",
+    tabSalary: "💰 Расчет зарплаты",
     monthLabel: "Месяц:",
     yearLabel: "Год:",
     todayBtn: "📅 Текущий месяц",
@@ -21,6 +23,28 @@ const TRANSLATIONS = {
     saveSuccess: "✓ Все данные сохранены!",
     saveError: "⚠ Ошибка сохранения в БД.",
     unsavedWarning: "⚠ Есть несохраненные изменения",
+    slipTitle: "Детализированный расчет (Pasek Płacowy)",
+    slipSubtitle: "Структура начислений и удержаний (ZUS, PIT, PPK)",
+    secEarnings: "Начисления (Składniki wynagrodzenia)",
+    secZusWorker: "Взносы ZUS за счет работника (13.71%)",
+    secPpk: "PPK (Pracownicze Plany Kapitałowe)",
+    secHealth: "Медицинское страхование (Składka zdrowotna NFZ - 9%)",
+    secTax: "Подоходный налог (Podatek dochodowy PIT)",
+    secOther: "Прочие удержания (Potrącenia inne)",
+    lblBruttoTotal: "Итого Брутто (Przychód / Brutto):",
+    lblZusWorkerTotal: "Всего ZUS работника:",
+    lblPpkZatr: "Взносы сотрудника (PPK zatrudniony - 2%):",
+    lblHealthBase: "База для сл. здоровья (Podstawa):",
+    lblHealthSum: "Сумма взноса (Kasa chor. pobrana):",
+    lblTaxBase: "Налогооблагаемая база (Podstawa opodatkowania):",
+    lblCostObtain: "Расходы на получение дохода (Koszty uzyskania):",
+    lblTaxRelief: "Налоговая льгота (Ulga podatkowa):",
+    lblTaxSum: "Аванс по налогу (Zaliczka pod. doch.):",
+    lblNettoFinal: "К выплате на руки (NETTO / Na konto):",
+    baseSalaryTitle: "Основной оклад (Płaca zasadnicza)",
+    overtimeAddTitle: "Доплата за переработку (Nadgodziny 50%/100%)",
+    nightAddTitle: "Ночные часы (Dodatek za godz. nocna)",
+    bonusTitle: "Премия / Доплаты",
     modalTitleDefault: "Настройка дня",
     holidayPrefix: "Праздник: ",
     quickSelectLabel: "Быстрый выбор смены:",
@@ -40,6 +64,8 @@ const TRANSLATIONS = {
   pl: {
     months: ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"],
     weekdays: ["Pon", "Wt", "Śr", "Czw", "Pt", "Sob", "Ndz"],
+    tabCalendar: "📅 Kalendarz",
+    tabSalary: "💰 Rozliczenie płacy",
     monthLabel: "Miesiąc:",
     yearLabel: "Rok:",
     todayBtn: "📅 Bieżący miesiąc",
@@ -59,6 +85,28 @@ const TRANSLATIONS = {
     saveSuccess: "✓ Wszystkie dane zapisane!",
     saveError: "⚠ Błąd zapisu do bazy danych.",
     unsavedWarning: "⚠ Masz niezapisane zmiany",
+    slipTitle: "Szczegółowe rozliczenie (Pasek Płacowy)",
+    slipSubtitle: "Struktura składników i potrąceń (ZUS, PIT, PPK)",
+    secEarnings: "Składniki wynagrodzenia (Przychód)",
+    secZusWorker: "Składki ZUS pracownika (13.71%)",
+    secPpk: "PPK (Pracownicze Plany Kapitałowe)",
+    secHealth: "Składka zdrowotna (NFZ - 9%)",
+    secTax: "Podatek dochodowy (PIT)",
+    secOther: "Inne potrącenia",
+    lblBruttoTotal: "Razem Brutto (Przychód):",
+    lblZusWorkerTotal: "Razem ZUS pracownika:",
+    lblPpkZatr: "Wpłata pracownika PPK (2%):",
+    lblHealthBase: "Podstawa składki zdrowotnej:",
+    lblHealthSum: "Pobrana składka zdrowotna:",
+    lblTaxBase: "Podstawa opodatkowania:",
+    lblCostObtain: "Koszty uzyskania przychodu:",
+    lblTaxRelief: "Ulga podatkowa:",
+    lblTaxSum: "Zaliczka na podatek dochodowy:",
+    lblNettoFinal: "Do wypłaty na rękę (NETTO / Na konto):",
+    baseSalaryTitle: "Płaca zasadnicza",
+    overtimeAddTitle: "Dodatek za nadgodziny",
+    nightAddTitle: "Dodatek za godziny nocne",
+    bonusTitle: "Premia / Dodatki",
     modalTitleDefault: "Konfiguracja dnia",
     holidayPrefix: "Święto: ",
     quickSelectLabel: "Szybki wybór zmiany:",
@@ -91,12 +139,18 @@ const todayBtn = document.getElementById('todayBtn');
 const calendarGrid = document.getElementById('calendarGrid');
 const weekdaysGrid = document.getElementById('weekdaysGrid');
 
+const tabBtnCalendar = document.getElementById('tabBtnCalendar');
+const tabBtnSalary = document.getElementById('tabBtnSalary');
+const tabContentCalendar = document.getElementById('tabContentCalendar');
+const tabContentSalary = document.getElementById('tabContentSalary');
+
 const calcTypeSelect = document.getElementById('calcTypeSelect');
 const monthlyRateBox = document.getElementById('monthlyRateBox');
 const hourlyRateBox = document.getElementById('hourlyRateBox');
 const monthlyRateInput = document.getElementById('monthlyRateInput');
 const rateInput = document.getElementById('rateInput');
 const bonusInput = document.getElementById('bonusInput');
+const otherDeductionsInput = document.getElementById('otherDeductionsInput');
 
 const dayModal = document.getElementById('dayModal');
 const modalTitle = document.getElementById('modalTitle');
@@ -127,17 +181,31 @@ function t(key) {
   return TRANSLATIONS[currentLang][key] || key;
 }
 
+// Переключение табов
+tabBtnCalendar.addEventListener('click', () => {
+  tabBtnCalendar.classList.add('active');
+  tabBtnSalary.classList.remove('active');
+  tabContentCalendar.classList.add('active');
+  tabContentSalary.classList.remove('active');
+});
+
+tabBtnSalary.addEventListener('click', () => {
+  tabBtnSalary.classList.add('active');
+  tabBtnCalendar.classList.remove('active');
+  tabContentSalary.classList.add('active');
+  tabContentCalendar.classList.remove('active');
+  calculateTotals(); // Обновляем расчет при открытии вкладки
+});
+
 function updateTexts() {
   langRuBtn.classList.toggle('active', currentLang === 'ru');
   langPlBtn.classList.toggle('active', currentLang === 'pl');
 
-  // Обновление статических элементов с data-i18n
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     el.innerText = t(key);
   });
 
-  // Заполнение селекта месяцев текущим языком
   const selectedMonthVal = monthSelect.value;
   monthSelect.innerHTML = '';
   TRANSLATIONS[currentLang].months.forEach((mName, idx) => {
@@ -148,7 +216,6 @@ function updateTexts() {
   });
   if (selectedMonthVal !== "") monthSelect.value = selectedMonthVal;
 
-  // Дни недели в шапке календаря
   weekdaysGrid.innerHTML = '';
   TRANSLATIONS[currentLang].weekdays.forEach(wd => {
     const div = document.createElement('div');
@@ -263,6 +330,7 @@ todayBtn.addEventListener('click', () => { setCurrentDate(); loadShiftsFromDB();
 monthlyRateInput.addEventListener('input', () => { calculateTotals(); markAsUnsaved(); });
 rateInput.addEventListener('input', () => { calculateTotals(); markAsUnsaved(); });
 bonusInput.addEventListener('input', () => { calculateTotals(); markAsUnsaved(); });
+otherDeductionsInput.addEventListener('input', () => { calculateTotals(); });
 
 async function loadShiftsFromDB() {
   const month = monthSelect.value;
@@ -271,9 +339,9 @@ async function loadShiftsFromDB() {
   const savedFinance = JSON.parse(localStorage.getItem(storageKey) || '{}');
   
   if (savedFinance.calcType) calcTypeSelect.value = savedFinance.calcType;
-  monthlyRateInput.value = savedFinance.monthlyRate || '5800';
+  monthlyRateInput.value = savedFinance.monthlyRate || '5500';
   rateInput.value = savedFinance.rate || '';
-  bonusInput.value = savedFinance.bonus || '0';
+  bonusInput.value = savedFinance.bonus || '850';
 
   monthlyRateBox.style.display = calcTypeSelect.value === 'monthly' ? 'block' : 'none';
   hourlyRateBox.style.display = calcTypeSelect.value === 'monthly' ? 'none' : 'block';
@@ -469,25 +537,76 @@ function calculateTotals() {
   });
 
   const bonusAmount = parseFloat(bonusInput.value) || 0;
-  let totalBasePay = 0, totalOvertimePay = 0;
+  let baseSalary = 0, hourlyRate = 0;
 
   if (calcTypeSelect.value === 'monthly') {
-    const monthlyRate = parseFloat(monthlyRateInput.value) || 0;
-    const effectiveHourlyRate = normBaseHours > 0 ? (monthlyRate / normBaseHours) : 0;
-    totalBasePay = actualWorkedBaseHours >= normBaseHours ? monthlyRate : actualWorkedBaseHours * effectiveHourlyRate;
-    totalOvertimePay = totalOvertime * (effectiveHourlyRate * 2);
+    const monthlyRate = parseFloat(monthlyRateInput.value) || 5500;
+    const effHourly = normBaseHours > 0 ? (monthlyRate / normBaseHours) : 0;
+    baseSalary = actualWorkedBaseHours >= normBaseHours ? monthlyRate : actualWorkedBaseHours * effHourly;
+    hourlyRate = effHourly;
   } else {
-    const hourlyRate = parseFloat(rateInput.value) || 0;
-    totalBasePay = actualWorkedBaseHours * hourlyRate;
-    totalOvertimePay = totalOvertime * (hourlyRate * 2);
+    hourlyRate = parseFloat(rateInput.value) || 35;
+    baseSalary = actualWorkedBaseHours * hourlyRate;
   }
 
-  const totalGrossEarned = totalBasePay + totalOvertimePay + bonusAmount;
+  // Переработка (оплата с коэффициентом 50% или 100% надбавки)
+  const overtimePay = totalOvertime * (hourlyRate * 1.5);
+  const bruttoTotal = baseSalary + overtimePay + bonusAmount;
+
+  // Расчет удержаний по польскому законодательству (как на листе)
+  // 1. ZUS работника (13.71%)
+  const zusEmeryt = bruttoTotal * 0.0976;
+  const zusRent = bruttoTotal * 0.015;
+  const zusChor = bruttoTotal * 0.0245;
+  const zusWorkerTotal = zusEmeryt + zusRent + zusChor;
+
+  // 2. PPK zatrudniony (2%)
+  const ppkZatr = bruttoTotal * 0.02;
+
+  // 3. Składka zdrowotna (9% от Brutto - ZUS społeczne - PPK)
+  const healthBase = bruttoTotal - zusWorkerTotal - ppkZatr;
+  const healthSum = Math.max(0, healthBase * 0.09);
+
+  // 4. Podatek dochodowy PIT (12% от налогооблагаемой базы минус ulga 300)
+  const costObtain = 300; // Koszty uzyskania
+  const taxBase = Math.max(0, bruttoTotal - zusWorkerTotal - costObtain);
+  let taxCalculated = (taxBase * 0.12) - 300; // Ulga podatkowa 300 zł
+  const taxSum = Math.max(0, taxCalculated);
+
+  // 5. Inne potrącenia (Kantyna, Medicover, Pramerica и т.д.)
+  const otherDeductions = parseFloat(otherDeductionsInput.value) || 0;
+
+  // 6. NETTO
+  const nettoFinal = bruttoTotal - zusWorkerTotal - ppkZatr - healthSum - taxSum - otherDeductions;
+
+  // Отрендерим данные в Календаре
   totalShiftsEl.innerText = daysWorked;
   totalBaseHoursEl.innerText = `${actualWorkedBaseHours} ч (из ${normBaseHours}ч)`;
   totalOvertimeHoursEl.innerText = `${totalOvertime} ч`;
   totalAllHoursEl.innerText = `${actualWorkedBaseHours + totalOvertime} ч`;
-  totalGrossEarnedEl.innerText = `${totalGrossEarned.toFixed(2)} zł`;
+  totalGrossEarnedEl.innerText = `${bruttoTotal.toFixed(2)} zł`;
+
+  // Отрендерим данные в Детализированном расчете зарплаты (Pasek płacowy)
+  const slipEarningsList = document.getElementById('slipEarningsList');
+  slipEarningsList.innerHTML = `
+    <div class="slip-row"><span>${t('baseSalaryTitle')}:</span><span>${baseSalary.toFixed(2)} zł</span></div>
+    ${totalOvertime > 0 ? `<div class="slip-row"><span>${t('overtimeAddTitle')} (${totalOvertime}h):</span><span>${overtimePay.toFixed(2)} zł</span></div>` : ''}
+    ${bonusAmount > 0 ? `<div class="slip-row"><span>${t('bonusTitle')}:</span><span>${bonusAmount.toFixed(2)} zł</span></div>` : ''}
+  `;
+
+  document.getElementById('slipBruttoVal').innerText = `${bruttoTotal.toFixed(2)} zł`;
+  document.getElementById('zusEmeryt').innerText = `${zusEmeryt.toFixed(2)} zł`;
+  document.getElementById('zusRent').innerText = `${zusRent.toFixed(2)} zł`;
+  document.getElementById('zusChor').innerText = `${zusChor.toFixed(2)} zł`;
+  document.getElementById('slipZusWorkerTotal').innerText = `${zusWorkerTotal.toFixed(2)} zł`;
+  
+  document.getElementById('ppkZatrVal').innerText = `${ppkZatr.toFixed(2)} zł`;
+  document.getElementById('healthBaseVal').innerText = `${healthBase.toFixed(2)} zł`;
+  document.getElementById('healthSumVal').innerText = `${healthSum.toFixed(2)} zł`;
+
+  document.getElementById('taxBaseVal').innerText = `${taxBase.toFixed(2)} zł`;
+  document.getElementById('taxSumVal').innerText = `${taxSum.toFixed(2)} zł`;
+  document.getElementById('slipNettoVal').innerText = `${nettoFinal.toFixed(2)} zł`;
 
   localStorage.setItem(`finance_${year}_${month}`, JSON.stringify({
     calcType: calcTypeSelect.value,
