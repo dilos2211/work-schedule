@@ -43,7 +43,7 @@ const TRANSLATIONS = {
     lblTaxSum: "Аванс по налогу (Zaliczka pod. doch.):",
     lblNettoFinal: "К выплате на руки (NETTO / Na konto):",
     baseSalaryTitle: "Основной оклад (Płaca zasadnicza)",
-    overtimeAddTitle: "Доплата за переработку (Nadgodziny 50%)",
+    overtimeAddTitle: "Доплата за переработку (Nadgodziny 100%)",
     nightAddTitle: "Доплата за ночные часы (+20%)",
     bonusTitle: "Премия / Доплаты",
     modalTitleDefault: "Настройка дня",
@@ -107,7 +107,7 @@ const TRANSLATIONS = {
     lblTaxSum: "Zaliczka na podatek dochodowy:",
     lblNettoFinal: "Do wypłaty na rękę (NETTO / Na konto):",
     baseSalaryTitle: "Płaca zasadnicza",
-    overtimeAddTitle: "Dodatek za nadgodziny",
+    overtimeAddTitle: "Dodatek za nadgodziny (100%)",
     nightAddTitle: "Dodatek za godziny nocne (+20%)",
     bonusTitle: "Premia / Dodatki",
     modalTitleDefault: "Konfiguracja dnia",
@@ -375,7 +375,6 @@ async function loadShiftsFromDB() {
   }
 }
 
-// Функция расчета ночных часов (с 22:00 до 06:00) внутри смены
 function calculateNightHours(start, end) {
   if (!start || !end) return 0;
   const [sH, sM] = start.split(':').map(Number);
@@ -384,13 +383,7 @@ function calculateNightHours(start, end) {
   let endMinutes = eH * 60 + eM;
   if (endMinutes <= startMinutes) endMinutes += 24 * 60;
 
-  // Отрезок ночного времени: с 22:00 (1320 мин) до 06:00 следующего дня (360 мин / 1800 мин)
   let nightMinutes = 0;
-  // Проходим поминутно или интервалами. Для простоты и точности проверим ночные окна:
-  // Окно 1: от 22:00 (1320) до 24:00 (1440)
-  // Окно 2: от 00:00 (0) до 06:00 (360)
-  // И аналогично для следующего дня, если смена переходит полночь.
-
   for (let m = startMinutes; m < endMinutes; m++) {
     const dayMinute = m % (24 * 60);
     if (dayMinute >= 22 * 60 || dayMinute < 6 * 60) {
@@ -576,20 +569,22 @@ function calculateTotals() {
 
   const bonusAmount = parseFloat(bonusInput.value) || 0;
   let baseSalary = 0, hourlyRate = 0;
+  const effHourly = normBaseHours > 0 ? (parseFloat(monthlyRateInput.value) || 5500) / normBaseHours : 0;
 
   if (calcTypeSelect.value === 'monthly') {
     const monthlyRate = parseFloat(monthlyRateInput.value) || 5500;
-    const effHourly = normBaseHours > 0 ? (monthlyRate / normBaseHours) : 0;
     baseSalary = actualWorkedBaseHours >= normBaseHours ? monthlyRate : actualWorkedBaseHours * effHourly;
-    hourlyRate = effHourly;
   } else {
     hourlyRate = parseFloat(rateInput.value) || 35;
     baseSalary = actualWorkedBaseHours * hourlyRate;
   }
 
-  // Расчет переработок и ночных доплат
-  const overtimePay = totalOvertime * (hourlyRate * 1.5);
-  const nightPay = totalNightHours * (hourlyRate * 0.20); // Законодательные 20% надбавки за ночные
+  // Расчет переработок (100% за каждый час переработки: ставка часа * 2)
+  const currentHourlyForOvertime = calcTypeSelect.value === 'monthly' ? effHourly : hourlyRate;
+  const overtimePay = totalOvertime * (currentHourlyForOvertime * 2);
+  
+  // Расчет ночных часов (+20%)
+  const nightPay = totalNightHours * (currentHourlyForOvertime * 0.20); 
   const bruttoTotal = baseSalary + overtimePay + nightPay + bonusAmount;
 
   // ZUS (13.71%)
