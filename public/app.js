@@ -16,6 +16,7 @@ const TRANSLATIONS = {
     sumDays: "Отработано дней:",
     sumBaseHours: "Базовые часы:",
     sumOvertime: "Переработка (Nadgodziny):",
+    sumNightHours: "Ночные часы (22:00-06:00):",
     sumAllHours: "Всего часов:",
     sumGross: "Ориентировочно брутто:",
     saveBtn: "Сохранить отчет",
@@ -42,8 +43,8 @@ const TRANSLATIONS = {
     lblTaxSum: "Аванс по налогу (Zaliczka pod. doch.):",
     lblNettoFinal: "К выплате на руки (NETTO / Na konto):",
     baseSalaryTitle: "Основной оклад (Płaca zasadnicza)",
-    overtimeAddTitle: "Доплата за переработку (Nadgodziny 50%/100%)",
-    nightAddTitle: "Ночные часы (Dodatek za godz. nocna)",
+    overtimeAddTitle: "Доплата за переработку (Nadgodziny 50%)",
+    nightAddTitle: "Доплата за ночные часы (+20%)",
     bonusTitle: "Премия / Доплаты",
     modalTitleDefault: "Настройка дня",
     holidayPrefix: "Праздник: ",
@@ -59,7 +60,8 @@ const TRANSLATIONS = {
     shiftBadge1: "1 смена",
     shiftBadge2: "2 смена",
     shiftBadge3: "3 смена",
-    overtimeBadgeText: "ч надг."
+    overtimeBadgeText: "ч надг.",
+    nightBadgeText: "ч ноч."
   },
   pl: {
     months: ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"],
@@ -78,6 +80,7 @@ const TRANSLATIONS = {
     sumDays: "Przepracowane dni:",
     sumBaseHours: "Godziny bazowe:",
     sumOvertime: "Nadgodziny:",
+    sumNightHours: "Godziny nocne (22:00-06:00):",
     sumAllHours: "Razem godzin:",
     sumGross: "Szacunkowo brutto:",
     saveBtn: "Zapisz raport",
@@ -105,7 +108,7 @@ const TRANSLATIONS = {
     lblNettoFinal: "Do wypłaty na rękę (NETTO / Na konto):",
     baseSalaryTitle: "Płaca zasadnicza",
     overtimeAddTitle: "Dodatek za nadgodziny",
-    nightAddTitle: "Dodatek za godziny nocne",
+    nightAddTitle: "Dodatek za godziny nocne (+20%)",
     bonusTitle: "Premia / Dodatki",
     modalTitleDefault: "Konfiguracja dnia",
     holidayPrefix: "Święto: ",
@@ -121,7 +124,8 @@ const TRANSLATIONS = {
     shiftBadge1: "1 zm.",
     shiftBadge2: "2 zm.",
     shiftBadge3: "3 zm.",
-    overtimeBadgeText: "h nadg."
+    overtimeBadgeText: "h nadg.",
+    nightBadgeText: "h noc."
   }
 };
 
@@ -150,7 +154,7 @@ const hourlyRateBox = document.getElementById('hourlyRateBox');
 const monthlyRateInput = document.getElementById('monthlyRateInput');
 const rateInput = document.getElementById('rateInput');
 const bonusInput = document.getElementById('bonusInput');
-const otherDeductionsInput = document.getElementById('otherDeductionsInput');
+const manualKantynaInput = document.getElementById('manualKantynaInput');
 
 const dayModal = document.getElementById('dayModal');
 const modalTitle = document.getElementById('modalTitle');
@@ -164,6 +168,7 @@ const quickBtns = document.querySelectorAll('.btn-quick');
 const totalShiftsEl = document.getElementById('totalShifts');
 const totalBaseHoursEl = document.getElementById('totalBaseHours');
 const totalOvertimeHoursEl = document.getElementById('totalOvertimeHours');
+const totalNightHoursEl = document.getElementById('totalNightHours');
 const totalAllHoursEl = document.getElementById('totalAllHours');
 const totalGrossEarnedEl = document.getElementById('totalGrossEarned');
 const saveBtn = document.getElementById('saveBtn');
@@ -181,7 +186,6 @@ function t(key) {
   return TRANSLATIONS[currentLang][key] || key;
 }
 
-// Переключение табов
 tabBtnCalendar.addEventListener('click', () => {
   tabBtnCalendar.classList.add('active');
   tabBtnSalary.classList.remove('active');
@@ -194,7 +198,7 @@ tabBtnSalary.addEventListener('click', () => {
   tabBtnCalendar.classList.remove('active');
   tabContentSalary.classList.add('active');
   tabContentCalendar.classList.remove('active');
-  calculateTotals(); // Обновляем расчет при открытии вкладки
+  calculateTotals();
 });
 
 function updateTexts() {
@@ -330,7 +334,7 @@ todayBtn.addEventListener('click', () => { setCurrentDate(); loadShiftsFromDB();
 monthlyRateInput.addEventListener('input', () => { calculateTotals(); markAsUnsaved(); });
 rateInput.addEventListener('input', () => { calculateTotals(); markAsUnsaved(); });
 bonusInput.addEventListener('input', () => { calculateTotals(); markAsUnsaved(); });
-otherDeductionsInput.addEventListener('input', () => { calculateTotals(); });
+manualKantynaInput.addEventListener('input', () => { calculateTotals(); markAsUnsaved(); });
 
 async function loadShiftsFromDB() {
   const month = monthSelect.value;
@@ -342,6 +346,7 @@ async function loadShiftsFromDB() {
   monthlyRateInput.value = savedFinance.monthlyRate || '5500';
   rateInput.value = savedFinance.rate || '';
   bonusInput.value = savedFinance.bonus || '850';
+  manualKantynaInput.value = savedFinance.manualKantyna || '0';
 
   monthlyRateBox.style.display = calcTypeSelect.value === 'monthly' ? 'block' : 'none';
   hourlyRateBox.style.display = calcTypeSelect.value === 'monthly' ? 'none' : 'block';
@@ -370,64 +375,40 @@ async function loadShiftsFromDB() {
   }
 }
 
-function renderCalendar() {
-  calendarGrid.innerHTML = '';
-  const month = parseInt(monthSelect.value);
-  const year = parseInt(yearSelect.value);
-  const polishHolidays = getPolishHolidays(year);
-  const firstDay = new Date(year, month, 1);
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+// Функция расчета ночных часов (с 22:00 до 06:00) внутри смены
+function calculateNightHours(start, end) {
+  if (!start || !end) return 0;
+  const [sH, sM] = start.split(':').map(Number);
+  const [eH, eM] = end.split(':').map(Number);
+  let startMinutes = sH * 60 + sM;
+  let endMinutes = eH * 60 + eM;
+  if (endMinutes <= startMinutes) endMinutes += 24 * 60;
 
-  let startingDay = firstDay.getDay() - 1;
-  if (startingDay === -1) startingDay = 6;
+  // Отрезок ночного времени: с 22:00 (1320 мин) до 06:00 следующего дня (360 мин / 1800 мин)
+  let nightMinutes = 0;
+  // Проходим поминутно или интервалами. Для простоты и точности проверим ночные окна:
+  // Окно 1: от 22:00 (1320) до 24:00 (1440)
+  // Окно 2: от 00:00 (0) до 06:00 (360)
+  // И аналогично для следующего дня, если смена переходит полночь.
 
-  for (let i = 0; i < startingDay; i++) {
-    const empty = document.createElement('div');
-    empty.className = 'day-cell empty';
-    calendarGrid.appendChild(empty);
-  }
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    const currentDate = new Date(year, month, day);
-    const dayOfWeek = currentDate.getDay();
-    const monthKey = String(month + 1).padStart(2, '0');
-    const dayKey = String(day).padStart(2, '0');
-    const holidayName = polishHolidays[`${monthKey}-${dayKey}`];
-    const isHoliday = Boolean(holidayName) || dayOfWeek === 0 || dayOfWeek === 6;
-
-    const dayState = monthData[day];
-    const cell = document.createElement('div');
-    cell.className = `day-cell ${isHoliday ? 'holiday' : ''}`;
-    
-    let shiftBadgeHTML = '', timeRangeHTML = '', overtimeHTML = '', holidayLabelHTML = '';
-    if (holidayName) holidayLabelHTML = `<div class="holiday-label">${holidayName}</div>`;
-
-    if (dayState && dayState.shift !== 'none') {
-      const shiftBadgeText = t(`shiftBadge${dayState.shift}`);
-      shiftBadgeHTML = `<span class="shift-badge shift-${dayState.shift}">${shiftBadgeText}</span>`;
-      timeRangeHTML = `<div class="time-range">${dayState.start}-${dayState.end}</div>`;
-      const dayCalc = calculateHoursForDay(year, month, day, dayState.start, dayState.end);
-      if (dayCalc.overtime > 0) overtimeHTML = `<div class="overtime-badge">+${dayCalc.overtime}${t('overtimeBadgeText')}</div>`;
+  for (let m = startMinutes; m < endMinutes; m++) {
+    const dayMinute = m % (24 * 60);
+    if (dayMinute >= 22 * 60 || dayMinute < 6 * 60) {
+      nightMinutes++;
     }
-
-    cell.innerHTML = `
-      <div class="day-header"><span class="day-number">${day}</span>${shiftBadgeHTML}</div>
-      ${holidayLabelHTML}${timeRangeHTML}${overtimeHTML}
-    `;
-    cell.addEventListener('click', () => openModal(day, holidayName));
-    calendarGrid.appendChild(cell);
   }
-  calculateTotals();
+  return nightMinutes / 60;
 }
 
 function calculateHoursForDay(year, month, day, start, end) {
-  if (!start || !end) return { total: 0, base: 0, overtime: 0 };
+  if (!start || !end) return { total: 0, base: 0, overtime: 0, night: 0 };
   const [sH, sM] = start.split(':').map(Number);
   const [eH, eM] = end.split(':').map(Number);
   let startMinutes = sH * 60 + sM;
   let endMinutes = eH * 60 + eM;
   if (endMinutes <= startMinutes) endMinutes += 24 * 60;
   const totalHours = (endMinutes - startMinutes) / 60;
+  const nightHours = calculateNightHours(start, end);
 
   const date = new Date(year, month, day);
   const dayOfWeek = date.getDay();
@@ -435,9 +416,9 @@ function calculateHoursForDay(year, month, day, start, end) {
   const isHoliday = Boolean(holidays[`${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`]);
   
   if (dayOfWeek === 0 || dayOfWeek === 6 || isHoliday) {
-    return { total: totalHours, base: 0, overtime: totalHours };
+    return { total: totalHours, base: 0, overtime: totalHours, night: nightHours };
   }
-  return { total: totalHours, base: Math.min(8, totalHours), overtime: Math.max(0, totalHours - 8) };
+  return { total: totalHours, base: Math.min(8, totalHours), overtime: Math.max(0, totalHours - 8), night: nightHours };
 }
 
 function updateOvertimePreview() {
@@ -450,7 +431,7 @@ function updateOvertimePreview() {
   const calc = calculateHoursForDay(parseInt(yearSelect.value), parseInt(monthSelect.value), selectedDay, start, end);
   const totalLabel = currentLang === 'ru' ? 'Всего' : 'Razem';
   const baseLabel = currentLang === 'ru' ? 'База' : 'Baza';
-  overtimePreview.innerHTML = `${totalLabel}: <strong>${calc.total}h</strong> | ${baseLabel}: ${calc.base}h | Nadg: <strong>${calc.overtime}h</strong>`;
+  overtimePreview.innerHTML = `${totalLabel}: <strong>${calc.total}h</strong> | ${baseLabel}: ${calc.base}h | Nadg: <strong>${calc.overtime}h</strong> | Noc: <strong>${calc.night.toFixed(1)}h</strong>`;
 }
 
 function openModal(day, holidayName = null) {
@@ -520,12 +501,68 @@ modalSaveBtn.addEventListener('click', () => {
   markAsUnsaved();
 });
 
+function renderCalendar() {
+  calendarGrid.innerHTML = '';
+  const month = parseInt(monthSelect.value);
+  const year = parseInt(yearSelect.value);
+  const polishHolidays = getPolishHolidays(year);
+  const firstDay = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  let startingDay = firstDay.getDay() - 1;
+  if (startingDay === -1) startingDay = 6;
+
+  for (let i = 0; i < startingDay; i++) {
+    const empty = document.createElement('div');
+    empty.className = 'day-cell empty';
+    calendarGrid.appendChild(empty);
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const currentDate = new Date(year, month, day);
+    const dayOfWeek = currentDate.getDay();
+    const monthKey = String(month + 1).padStart(2, '0');
+    const dayKey = String(day).padStart(2, '0');
+    const holidayName = polishHolidays[`${monthKey}-${dayKey}`];
+    const isHoliday = Boolean(holidayName) || dayOfWeek === 0 || dayOfWeek === 6;
+
+    const dayState = monthData[day];
+    const cell = document.createElement('div');
+    cell.className = `day-cell ${isHoliday ? 'holiday' : ''}`;
+    
+    let shiftBadgeHTML = '', timeRangeHTML = '', badgesHTML = '', holidayLabelHTML = '';
+    if (holidayName) holidayLabelHTML = `<div class="holiday-label">${holidayName}</div>`;
+
+    if (dayState && dayState.shift !== 'none') {
+      const shiftBadgeText = t(`shiftBadge${dayState.shift}`);
+      shiftBadgeHTML = `<span class="shift-badge shift-${dayState.shift}">${shiftBadgeText}</span>`;
+      timeRangeHTML = `<div class="time-range">${dayState.start}-${dayState.end}</div>`;
+      
+      const dayCalc = calculateHoursForDay(year, month, day, dayState.start, dayState.end);
+      let badgesList = [];
+      if (dayCalc.overtime > 0) badgesList.push(`+${dayCalc.overtime.toFixed(1)}${t('overtimeBadgeText')}`);
+      if (dayCalc.night > 0) badgesList.push(`${dayCalc.night.toFixed(1)}${t('nightBadgeText')}`);
+      if (badgesList.length > 0) {
+        badgesHTML = `<div class="overtime-badge">${badgesList.join(' | ')}</div>`;
+      }
+    }
+
+    cell.innerHTML = `
+      <div class="day-header"><span class="day-number">${day}</span>${shiftBadgeHTML}</div>
+      ${holidayLabelHTML}${timeRangeHTML}${badgesHTML}
+    `;
+    cell.addEventListener('click', () => openModal(day, holidayName));
+    calendarGrid.appendChild(cell);
+  }
+  calculateTotals();
+}
+
 function calculateTotals() {
   const month = parseInt(monthSelect.value);
   const year = parseInt(yearSelect.value);
   const normBaseHours = getMonthlyNormHours(year, month);
 
-  let daysWorked = 0, actualWorkedBaseHours = 0, totalOvertime = 0;
+  let daysWorked = 0, actualWorkedBaseHours = 0, totalOvertime = 0, totalNightHours = 0;
   Object.keys(monthData).forEach(dayNum => {
     const d = monthData[dayNum];
     if (d.shift !== 'none') {
@@ -533,6 +570,7 @@ function calculateTotals() {
       const calc = calculateHoursForDay(year, month, parseInt(dayNum), d.start, d.end);
       actualWorkedBaseHours += calc.base;
       totalOvertime += calc.overtime;
+      totalNightHours += calc.night;
     }
   });
 
@@ -549,48 +587,52 @@ function calculateTotals() {
     baseSalary = actualWorkedBaseHours * hourlyRate;
   }
 
-  // Переработка (оплата с коэффициентом 50% или 100% надбавки)
+  // Расчет переработок и ночных доплат
   const overtimePay = totalOvertime * (hourlyRate * 1.5);
-  const bruttoTotal = baseSalary + overtimePay + bonusAmount;
+  const nightPay = totalNightHours * (hourlyRate * 0.20); // Законодательные 20% надбавки за ночные
+  const bruttoTotal = baseSalary + overtimePay + nightPay + bonusAmount;
 
-  // Расчет удержаний по польскому законодательству (как на листе)
-  // 1. ZUS работника (13.71%)
+  // ZUS (13.71%)
   const zusEmeryt = bruttoTotal * 0.0976;
   const zusRent = bruttoTotal * 0.015;
   const zusChor = bruttoTotal * 0.0245;
   const zusWorkerTotal = zusEmeryt + zusRent + zusChor;
 
-  // 2. PPK zatrudniony (2%)
+  // PPK (2%)
   const ppkZatr = bruttoTotal * 0.02;
 
-  // 3. Składka zdrowotna (9% от Brutto - ZUS społeczne - PPK)
+  // Składka zdrowotna (9%)
   const healthBase = bruttoTotal - zusWorkerTotal - ppkZatr;
   const healthSum = Math.max(0, healthBase * 0.09);
 
-  // 4. Podatek dochodowy PIT (12% от налогооблагаемой базы минус ulga 300)
-  const costObtain = 300; // Koszty uzyskania
+  // PIT (12% - ulga 300)
+  const costObtain = 300;
   const taxBase = Math.max(0, bruttoTotal - zusWorkerTotal - costObtain);
-  let taxCalculated = (taxBase * 0.12) - 300; // Ulga podatkowa 300 zł
+  let taxCalculated = (taxBase * 0.12) - 300;
   const taxSum = Math.max(0, taxCalculated);
 
-  // 5. Inne potrącenia (Kantyna, Medicover, Pramerica и т.д.)
-  const otherDeductions = parseFloat(otherDeductionsInput.value) || 0;
+  // Удержания (фиксированные: UBEZP.fin=32, Pramerica=15, Medicover=4.90 + Ручной ввод столовой)
+  const fixedDeductions = 32.00 + 15.00 + 4.90;
+  const manualKantyna = parseFloat(manualKantynaInput.value) || 0;
+  const otherDeductionsTotal = fixedDeductions + manualKantyna;
 
-  // 6. NETTO
-  const nettoFinal = bruttoTotal - zusWorkerTotal - ppkZatr - healthSum - taxSum - otherDeductions;
+  // NETTO
+  const nettoFinal = bruttoTotal - zusWorkerTotal - ppkZatr - healthSum - taxSum - otherDeductionsTotal;
 
-  // Отрендерим данные в Календаре
+  // UI обновления в календаре
   totalShiftsEl.innerText = daysWorked;
   totalBaseHoursEl.innerText = `${actualWorkedBaseHours} ч (из ${normBaseHours}ч)`;
-  totalOvertimeHoursEl.innerText = `${totalOvertime} ч`;
-  totalAllHoursEl.innerText = `${actualWorkedBaseHours + totalOvertime} ч`;
+  totalOvertimeHoursEl.innerText = `${totalOvertime.toFixed(1)} ч`;
+  totalNightHoursEl.innerText = `${totalNightHours.toFixed(1)} ч`;
+  totalAllHoursEl.innerText = `${(actualWorkedBaseHours + totalOvertime).toFixed(1)} ч`;
   totalGrossEarnedEl.innerText = `${bruttoTotal.toFixed(2)} zł`;
 
-  // Отрендерим данные в Детализированном расчете зарплаты (Pasek płacowy)
+  // UI обновления в paska płacowego
   const slipEarningsList = document.getElementById('slipEarningsList');
   slipEarningsList.innerHTML = `
     <div class="slip-row"><span>${t('baseSalaryTitle')}:</span><span>${baseSalary.toFixed(2)} zł</span></div>
-    ${totalOvertime > 0 ? `<div class="slip-row"><span>${t('overtimeAddTitle')} (${totalOvertime}h):</span><span>${overtimePay.toFixed(2)} zł</span></div>` : ''}
+    ${totalOvertime > 0 ? `<div class="slip-row"><span>${t('overtimeAddTitle')} (${totalOvertime.toFixed(1)}h):</span><span>${overtimePay.toFixed(2)} zł</span></div>` : ''}
+    ${totalNightHours > 0 ? `<div class="slip-row"><span>${t('nightAddTitle')} (${totalNightHours.toFixed(1)}h):</span><span>${nightPay.toFixed(2)} zł</span></div>` : ''}
     ${bonusAmount > 0 ? `<div class="slip-row"><span>${t('bonusTitle')}:</span><span>${bonusAmount.toFixed(2)} zł</span></div>` : ''}
   `;
 
@@ -606,13 +648,15 @@ function calculateTotals() {
 
   document.getElementById('taxBaseVal').innerText = `${taxBase.toFixed(2)} zł`;
   document.getElementById('taxSumVal').innerText = `${taxSum.toFixed(2)} zł`;
+  document.getElementById('otherDeductionsSumVal').innerText = `${otherDeductionsTotal.toFixed(2)} zł`;
   document.getElementById('slipNettoVal').innerText = `${nettoFinal.toFixed(2)} zł`;
 
   localStorage.setItem(`finance_${year}_${month}`, JSON.stringify({
     calcType: calcTypeSelect.value,
     monthlyRate: monthlyRateInput.value,
     rate: rateInput.value,
-    bonus: bonusInput.value
+    bonus: bonusInput.value,
+    manualKantyna: manualKantynaInput.value
   }));
 }
 

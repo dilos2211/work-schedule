@@ -63,12 +63,12 @@
           </select>
         </div>
 
-        <div id="monthlyRateBox" class="finance-group">
+        <div id="monthlyRateBox" class="finance-group" style="margin-top: 10px;">
           <label for="monthlyRateInput" data-i18n="monthlyRateLabel">Оклад брутто (zł):</label>
           <input type="number" id="monthlyRateInput" value="5500" step="50">
         </div>
 
-        <div id="hourlyRateBox" class="finance-group" style="display: none;">
+        <div id="hourlyRateBox" class="finance-group" style="display: none; margin-top: 10px;">
           <label for="rateInput" data-i18n="hourlyRateLabel">Ставка в час (zł/ч):</label>
           <input type="number" id="rateInput" value="35" step="1">
         </div>
@@ -98,6 +98,10 @@
         <div class="summary-row">
           <span data-i18n="sumOvertime">Переработка (Nadgodziny):</span>
           <span id="totalOvertimeHours" style="color: #f59e0b;">0 ч</span>
+        </div>
+        <div class="summary-row">
+          <span data-i18n="sumNightHours">Ночные часы (22:00-06:00):</span>
+          <span id="totalNightHours" style="color: #a855f7;">0 ч</span>
         </div>
         <div class="summary-row">
           <span data-i18n="sumAllHours">Всего часов:</span>
@@ -174,8 +178,16 @@
 
         <div class="slip-section-title" data-i18n="secOther">Прочие удержания (Potrącenia inne)</div>
         <div class="slip-row">
-          <span>Kantyna / Medicover / Pramerica / Inne:</span>
-          <input type="number" id="otherDeductionsInput" value="338.53" step="1" style="width: 100px; text-align: right; padding: 4px; font-size: 13px;">
+          <span>UBEZP.fin (32.00) + Pramerica (15.00) + Medicover (4.90):</span>
+          <span style="color: var(--text-main);">51.90 zł</span>
+        </div>
+        <div class="slip-row" style="align-items: center; margin-top: 6px;">
+          <span>Kantyna / kluczyk (ручной ввод):</span>
+          <input type="number" id="manualKantynaInput" value="0" step="1" style="width: 90px; text-align: right; padding: 4px; font-size: 13px;">
+        </div>
+        <div class="slip-row subtotal">
+          <span>Всего прочих удержаний:</span>
+          <span id="otherDeductionsSumVal">51.90 zł</span>
         </div>
 
         <div class="slip-row final-netto">
