@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Шажки к Миллиону — Учет сверхурочных (KP Polska)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Шапка с логотипом на всю ширину и новым названием -->
+    <div class="header-studio">
+      <img src="logo-yy.png" alt="Logo YY" class="header-logo">
+      <div class="header-titles">
+        <h1 class="brand-title">Шажки к Миллиону</h1>
+        <span class="brand-subtitle">Учет сверхурочных (KP Polska)</span>
+      </div>
+    </div>
+
+    <!-- Панель управления датой -->
+    <div class="controls-card">
+      <div class="controls-row">
+        <div class="select-wrapper">
+          <label for="monthSelect">Месяц:</label>
+          <select id="monthSelect">
+            <option value="0">Январь</option>
+            <option value="1">Февраль</option>
+            <option value="2">Март</option>
+            <option value="3">Апрель</option>
+            <option value="4">Май</option>
+            <option value="5">Июнь</option>
+            <option value="6">Июль</option>
+            <option value="7">Август</option>
+            <option value="8">Сентябрь</option>
+            <option value="9">Октябрь</option>
+            <option value="10">Ноябрь</option>
+            <option value="11">Декабрь</option>
+          </select>
+        </div>
+
+        <div class="select-wrapper" style="max-width: 100px;">
+          <label for="yearSelect">Год:</label>
+          <select id="yearSelect">
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+        </div>
+      </div>
+
+      <button id="todayBtn" class="btn-gold" style="margin-top: 5px;">📅 Текущий месяц</button>
+    </div>
+
+    <!-- Финансовый блок -->
+    <div class="finance-card">
+      <div class="finance-group">
+        <label for="calcTypeSelect">Тип оплаты:</label>
+        <select id="calcTypeSelect">
+          <option value="monthly">Оклад за месяц (zł/мес)</option>
+          <option value="hourly">Почасовая ставка (zł/ч)</option>
+        </select>
+      </div>
+
+      <div id="monthlyRateBox" class="finance-group">
+        <label for="monthlyRateInput">Оклад брутто (zł):</label>
+        <input type="number" id="monthlyRateInput" value="5800" step="50">
+      </div>
+
+      <div id="hourlyRateBox" class="finance-group" style="display: none;">
+        <label for="rateInput">Ставка в час (zł/ч):</label>
+        <input type="number" id="rateInput" value="35" step="1">
+      </div>
+
+      <div class="finance-group" style="margin-top: 10px;">
+        <label for="bonusInput">Премия брутто (zł):</label>
+        <input type="number" id="bonusInput" value="0" step="10">
+      </div>
+    </div>
+
+    <!-- Календарь -->
+    <div class="calendar-card">
+      <div class="weekdays-grid">
+        <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
+      </div>
+      <div id="calendarGrid" class="calendar-grid">
+        <!-- Дни генерируются через JS -->
+      </div>
+    </div>
+
+    <!-- Статус сообщения -->
+    <div id="statusMsg" class="status-msg"></div>
+
+    <!-- Итоги / Сводка -->
+    <div class="summary-card">
+      <div class="summary-row">
+        <span>Отработано дней:</span>
+        <span id="totalShifts">0</span>
+      </div>
+      <div class="summary-row">
+        <span>Базовые часы:</span>
+        <span id="totalBaseHours">0 ч (из 0ч)</span>
+      </div>
+      <div class="summary-row">
+        <span>Переработка (Nadgodziny):</span>
+        <span id="totalOvertimeHours" style="color: #f59e0b;">0 ч</span>
+      </div>
+      <div class="summary-row">
+        <span>Всего часов:</span>
+        <span id="totalAllHours">0 ч</span>
+      </div>
+      <div class="summary-row total">
+        <span>Ориентировочно брутто:</span>
+        <span id="totalGrossEarned">0.00 zł</span>
+      </div>
+    </div>
+
+    <button id="saveBtn" class="btn-gold" style="width: 100%; padding: 14px; font-size: 15px; margin-bottom: 30px;">Сохранить отчет</button>
+
+  </div>
+
+  <!-- Модальное окно настройки дня -->
+  <div id="dayModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span id="modalTitle">Настройка дня</span>
+        <button id="modalClose" class="modal-close">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Баннер праздника -->
+        <div id="modalHolidayBanner" class="modal-holiday-info"></div>
+
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">Быстрый выбор смены:</div>
+        <div class="quick-shifts">
+          <button class="btn-quick" data-shift="1">1 смена</button>
+          <button class="btn-quick" data-shift="2">2 смена</button>
+          <button class="btn-quick" data-shift="3">3 смена</button>
+          <button class="btn-quick" data-shift="none">Выходной</button>
+        </div>
+
+        <div class="time-inputs-group">
+          <div class="time-field">
+            <label for="startTime">Начало:</label>
+            <input type="time" id="startTime">
+          </div>
+          <div class="time-field">
+            <label for="endTime">Конец:</label>
+            <input type="time" id="endTime">
+          </div>
+        </div>
+
+        <div id="overtimePreview" class="overtime-preview">
+          Выходной день
+        </div>
+
+        <button id="modalSaveBtn" class="btn-gold" style="width: 100%;">Применить</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
