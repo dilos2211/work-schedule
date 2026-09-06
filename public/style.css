@@ -1,0 +1,397 @@
+:root {
+  --bg-color: #121212;
+  --card-bg: #1a1a1a;
+  --card-border: #2a2a2a;
+  --gold-primary: #D4AF37;
+  --gold-hover: #e5c158;
+  --text-main: #f3f4f6;
+  --text-muted: #9ca3af;
+  --success-color: #4ade80;
+  --error-color: #f87171;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 480px; /* Идеально для телефона */
+  box-sizing: border-box;
+}
+
+/* --- ШАПКА И ЛОГОТИП СТИЛЯ SOLID PROJECT STUDIO --- */
+.header-studio {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  padding: 12px 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+}
+
+.header-logo {
+  width: 45px;
+  height: 45px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.3));
+}
+
+.header-titles {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #fff 30%, var(--gold-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.brand-subtitle {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+  text-transform: uppercase;
+}
+
+/* --- ПАНЕЛЬ УПРАВЛЕНИЯ (МЕСЯЦ, ГОД, КНОПКА) --- */
+.controls-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+}
+
+.controls-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.select-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.select-wrapper label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+select, input[type="number"], input[type="time"] {
+  background: #242424;
+  border: 1px solid #333;
+  color: var(--text-main);
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+select:focus, input:focus {
+  border-color: var(--gold-primary);
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, #D4AF37 0%, #aa8c2c 100%);
+  color: #121212;
+  font-weight: 600;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  width: 100%;
+  font-size: 14px;
+}
+
+.btn-gold:active {
+  opacity: 0.85;
+}
+
+/* --- ФИНАНСОВЫЙ БЛОК --- */
+.finance-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+}
+
+.finance-group {
+  margin-bottom: 10px;
+}
+
+.finance-group:last-child {
+  margin-bottom: 0;
+}
+
+.finance-group label {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* --- КАЛЕНДАРЬ --- */
+.calendar-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+}
+
+.weekdays-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.day-cell {
+  background: #242424;
+  border: 1px solid #333;
+  border-radius: 8px;
+  min-height: 60px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  cursor: pointer;
+  box-sizing: border-box;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.day-cell.empty {
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+
+.day-cell:not(.empty):active {
+  border-color: var(--gold-primary);
+}
+
+.day-cell.holiday {
+  background: #2a1c1c;
+  border-color: #4a2828;
+}
+
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.day-number {
+  color: var(--text-main);
+}
+
+.holiday-label {
+  font-size: 8px;
+  color: var(--error-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.shift-badge {
+  font-size: 8px;
+  padding: 1px 3px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.shift-1 { background: rgba(74, 222, 128, 0.2); color: var(--success-color); }
+.shift-2 { background: rgba(212, 175, 55, 0.2); color: var(--gold-primary); }
+.shift-3 { background: rgba(96, 165, 250, 0.2); color: #60a5fa; }
+
+.time-range {
+  font-size: 8.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.overtime-badge {
+  font-size: 8px;
+  color: #f59e0b;
+  margin-top: auto;
+}
+
+/* --- СВОДКА И СТАТУС --- */
+.summary-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+}
+
+.summary-row.total {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--gold-primary);
+  border-top: 1px solid var(--card-border);
+  padding-top: 8px;
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+.summary-row span:last-child {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.status-msg {
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  text-align: center;
+  margin-bottom: 15px;
+  display: none;
+}
+
+/* --- МОДАЛЬНОЕ ОКНО --- */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 15px;
+  box-sizing: border-box;
+}
+
+.modal-content {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  width: 100%;
+  max-width: 360px;
+  border-radius: 14px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--gold-primary);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.modal-holiday-info {
+  font-size: 11px;
+  color: var(--error-color);
+  background: rgba(248, 113, 113, 0.1);
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  display: none;
+}
+
+.quick-shifts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 15px;
+}
+
+.btn-quick {
+  background: #242424;
+  border: 1px solid #333;
+  color: var(--text-main);
+  padding: 8px 4px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.btn-quick.active {
+  border-color: var(--gold-primary);
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold-primary);
+}
+
+.time-inputs-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.time-field {
+  flex: 1;
+}
+
+.time-field label {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.overtime-preview {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: #242424;
+  padding: 8px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  text-align: center;
+}
